@@ -2,6 +2,7 @@ node_modules/
 .env
 dist/
 build/
+client/dist/
 .DS_Store
 *.log
 read-pdf.mjs

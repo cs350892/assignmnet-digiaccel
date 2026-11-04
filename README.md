@@ -5,7 +5,7 @@ MERN stack to-do app with weekly task summaries, search, and mobile-first UI.
 ## Stack
 
 - **Backend:** Node.js, Express (ES modules), MongoDB, Mongoose
-- **Frontend:** React, Vite, Tailwind CSS (coming next)
+- **Frontend:** React, Vite, Tailwind CSS
 
 ## Backend setup
 
@@ -46,3 +46,24 @@ API base: `http://localhost:5000`
 ```
 
 Weeks run **Monday → Sunday** based on `dateTime`.
+
+## Frontend setup
+
+```bash
+cd client
+copy .env.example .env
+npm install
+npm run dev
+```
+
+App: `http://localhost:5173` (talks to API on port 5000)
+
+## Run both
+
+1. Start MongoDB and run `npm run dev` in `server/`
+2. Run `npm run dev` in `client/`
+
+## Deploy notes
+
+- Deploy API (Render, Railway, etc.) with `MONGODB_URI` and `CLIENT_ORIGIN` set to your Netlify URL.
+- Deploy client on Netlify with `VITE_API_URL` pointing to your live API.
