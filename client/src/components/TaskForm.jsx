@@ -1,30 +1,42 @@
 import { useState } from 'react';
-import { fromInputDateTimeLocal, toInputDateTimeLocal } from '../utils/dates.js';
+import { Calendar, Clock } from 'lucide-react';
+import {
+  combineDateAndTime,
+  formatLongDate,
+  toInputDate,
+  toInputTime,
+} from '../utils/dates.js';
 
-const empty = () => ({
-  title: '',
-  description: '',
-  dateTime: toInputDateTimeLocal(new Date().toISOString()),
-  priority: '',
-  status: 'In Progress',
-});
+function getInitialValues(task) {
+  if (task) {
+    return {
+      title: task.title,
+      description: task.description || '',
+      date: toInputDate(task.dateTime),
+      startTime: toInputTime(task.dateTime),
+      endTime: toInputTime(task.dateTime),
+    };
+  }
 
-export default function TaskForm({ initial, onSubmit, onCancel, submitLabel = 'Save' }) {
-  const [form, setForm] = useState(() =>
-    initial
-      ? {
-          title: initial.title,
-          description: initial.description || '',
-          dateTime: toInputDateTimeLocal(initial.dateTime),
-          priority: initial.priority || '',
-          status: initial.status || 'In Progress',
-        }
-      : empty()
-  );
+  const today = new Date();
+  return {
+    title: '',
+    description: '',
+    date: toInputDate(today.toISOString()),
+    startTime: '09:00',
+    endTime: '10:00',
+  };
+}
+
+const fieldClass =
+  'w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100';
+
+export default function TaskForm({ initial, onSubmit, submitLabel = 'Save' }) {
+  const [form, setForm] = useState(() => getInitialValues(initial));
   const [error, setError] = useState('');
 
-  function update(field, value) {
-    setForm((prev) => ({ ...prev, [field]: value }));
+  function setField(name, value) {
+    setForm((prev) => ({ ...prev, [name]: value }));
   }
 
   async function handleSubmit(e) {
@@ -33,96 +45,94 @@ export default function TaskForm({ initial, onSubmit, onCancel, submitLabel = 'S
       setError('Title is required');
       return;
     }
+
     setError('');
     await onSubmit({
       title: form.title.trim(),
       description: form.description.trim(),
-      dateTime: fromInputDateTimeLocal(form.dateTime),
-      priority: form.priority,
-      status: form.status,
+      dateTime: combineDateAndTime(form.date, form.startTime),
+      status: initial?.status || 'In Progress',
+      priority: '',
     });
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <p className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>
-      )}
+    <form onSubmit={handleSubmit} className="space-y-5">
+      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
 
-      <label className="block text-sm font-medium text-slate-700">
-        Title *
+      <div>
+        <label className="mb-2 block text-sm font-semibold text-gray-900">Task title</label>
         <input
-          className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-slate-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
+          className={fieldClass}
           value={form.title}
-          onChange={(e) => update('title', e.target.value)}
-          placeholder="What needs to be done?"
+          onChange={(e) => setField('title', e.target.value)}
+          placeholder="Doing Homework"
         />
-      </label>
-
-      <label className="block text-sm font-medium text-slate-700">
-        Description
-        <textarea
-          rows={3}
-          className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-slate-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
-          value={form.description}
-          onChange={(e) => update('description', e.target.value)}
-          placeholder="Add details (optional)"
-        />
-      </label>
-
-      <label className="block text-sm font-medium text-slate-700">
-        Date & time *
-        <input
-          type="datetime-local"
-          className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-slate-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
-          value={form.dateTime}
-          onChange={(e) => update('dateTime', e.target.value)}
-        />
-      </label>
-
-      <label className="block text-sm font-medium text-slate-700">
-        Priority
-        <select
-          className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-slate-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
-          value={form.priority}
-          onChange={(e) => update('priority', e.target.value)}
-        >
-          <option value="">None</option>
-          <option value="Low">Low</option>
-          <option value="Medium">Medium</option>
-          <option value="High">High</option>
-        </select>
-      </label>
-
-      <label className="block text-sm font-medium text-slate-700">
-        Status
-        <select
-          className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2.5 text-slate-900 outline-none focus:border-violet-500 focus:ring-2 focus:ring-violet-200"
-          value={form.status}
-          onChange={(e) => update('status', e.target.value)}
-        >
-          <option value="In Progress">In Progress</option>
-          <option value="Completed">Completed</option>
-        </select>
-      </label>
-
-      <div className="flex gap-3 pt-2">
-        <button
-          type="submit"
-          className="flex-1 rounded-xl bg-violet-600 py-3 font-semibold text-white shadow-sm hover:bg-violet-700"
-        >
-          {submitLabel}
-        </button>
-        {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-xl border border-slate-200 px-4 py-3 font-medium text-slate-600 hover:bg-slate-50"
-          >
-            Cancel
-          </button>
-        )}
       </div>
+
+      <div>
+        <p className="mb-2 text-sm font-semibold text-gray-900">Set Time</p>
+        <div className="grid grid-cols-2 gap-3">
+          <label>
+            <span className="mb-1 block text-xs text-gray-400">Start</span>
+            <div className="relative">
+              <input
+                type="time"
+                className={`${fieldClass} pr-10`}
+                value={form.startTime}
+                onChange={(e) => setField('startTime', e.target.value)}
+              />
+              <Clock className="pointer-events-none absolute right-3 top-3.5 h-5 w-5 text-gray-400" />
+            </div>
+          </label>
+          <label>
+            <span className="mb-1 block text-xs text-gray-400">Ends</span>
+            <div className="relative">
+              <input
+                type="time"
+                className={`${fieldClass} pr-10`}
+                value={form.endTime}
+                onChange={(e) => setField('endTime', e.target.value)}
+              />
+              <Clock className="pointer-events-none absolute right-3 top-3.5 h-5 w-5 text-gray-400" />
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div>
+        <p className="mb-2 text-sm font-semibold text-gray-900">Set Date</p>
+        <label className="relative block">
+          <span className={`${fieldClass} flex items-center justify-between`}>
+            {formatLongDate(form.date)}
+            <Calendar className="h-5 w-5 text-gray-400" />
+          </span>
+          <input
+            type="date"
+            className="absolute inset-0 cursor-pointer opacity-0"
+            value={form.date}
+            onChange={(e) => setField('date', e.target.value)}
+          />
+        </label>
+      </div>
+
+      <div>
+        <label className="mb-2 block text-sm font-semibold text-gray-900">Description</label>
+        <textarea
+          rows={4}
+          className={`${fieldClass} resize-none`}
+          value={form.description}
+          onChange={(e) => setField('description', e.target.value)}
+          placeholder="Add Description"
+        />
+      </div>
+
+      <button
+        type="submit"
+        className="w-full rounded-2xl bg-blue-600 py-4 font-semibold text-white hover:bg-blue-700"
+      >
+        {submitLabel}
+      </button>
     </form>
   );
 }
